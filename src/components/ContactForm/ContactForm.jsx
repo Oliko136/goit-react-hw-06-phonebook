@@ -1,58 +1,61 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { addContact } from "../../redux/actions";
+import { getContacts } from "../../redux/selectors";
 import { nanoid } from 'nanoid';
-import PropTypes from 'prop-types';
 import styles from './ContactForm.module.css';
 
-const INITIAL_STATE = {
-    name: '',
-    number: ''
-}
-
-export const ContactForm = ({ onSubmit }) => {
-    const [state, setState] = useState({...INITIAL_STATE});
+export const ContactForm = () => {
+    const contacts = useSelector(getContacts);
+    const dispatch = useDispatch();
     
-    const handleChange = ({target}) => {
-        const { name, value } = target;
-
-        setState({
-            ...state,
-            [name]: value
-        });
+    const doesNameAlreadyExist = ({ name }) => {
+        const normalizedName = name.toLowerCase();
+        
+        const duplicate = contacts.find(contact => {
+            const normalizedCurrentName = contact.name.toLowerCase();
+            return (normalizedName === normalizedCurrentName);
+        })
+        return Boolean(duplicate);
     }
-
+    
     const handleSubmit = (event) => {
         event.preventDefault();
-        onSubmit({ ...state });
-        reset();
-    }
+        const form = event.target;
+        
+        const newContact = {
+            name: form.elements.name.value,
+            number: form.elements.number.value
+        }
+        
+        if (doesNameAlreadyExist(newContact)) {
+            alert(`${newContact.name} is already in contacts.`);
+            return
+        }
 
-    const reset = () => {
-        setState({ ...INITIAL_STATE });
+        const action = addContact(newContact);
+        dispatch(action);
+        form.reset();
     }
     
     const contactNameId = useMemo(() => nanoid(), []);
     const contactNumberId = useMemo(() => nanoid(), []);
 
-    const { name, number } = state;
 
     return (
             <form onSubmit={handleSubmit} className={styles.form}>
                 <div className={styles.formField}>
                     <label htmlFor={contactNameId} className={styles.formLabel}>Name</label>
-                    <input className={styles.formInput} value={name} onChange={handleChange} id={contactNameId} type="text" name="name" placeholder="Name" required />
+                    <input className={styles.formInput} id={contactNameId} type="text" name="name" placeholder="Name" required />
                 </div>
                 
                 <div className={styles.formField}>
                     <label htmlFor={contactNumberId} className={styles.formLabel}>Number</label>
-                    <input className={styles.formInput} value={number} onChange={handleChange} id={contactNumberId} type="tel" name="number" placeholder="Number" required />
+                    <input className={styles.formInput} id={contactNumberId} type="tel" name="number" placeholder="Number" required />
                 </div>
             
                 <button type="submit" className={styles.formButton}>Add contact</button>
             </form>
         )
-}
-
-ContactForm.propTypes = {
-    onSubmit: PropTypes.func.isRequired
 }
     
