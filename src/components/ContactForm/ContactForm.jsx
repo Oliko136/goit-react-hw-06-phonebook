@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { addContact } from "../../redux/actions";
+import { addContact } from "../../redux/contacts-slice";
 import { getContacts } from "../../redux/selectors";
 import { nanoid } from 'nanoid';
 import styles from './ContactForm.module.css';
